@@ -16,6 +16,8 @@ button, select { font:inherit; border:1px solid var(--border); border-radius:8px
 #drop p { margin:12px 0 0; } #drop .hint { color:var(--muted); font-size:.9rem; margin-top:4px; } #drop svg { color:var(--accent); }
 .template-picker { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; margin:18px 0; }
 .template-picker label { color:var(--muted); }
+.fidelity-picker { margin:14px 0 0; color:var(--muted); font-size:.92rem; }
+.fidelity-picker label { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
 #preview { margin:20px auto 0; background:#fff; color:#1a1d21; text-align:left; min-height:520px; max-width:680px; padding:56px 64px; box-shadow:0 4px 20px #0002; border-radius:4px; }
 #preview p { line-height:1.7; margin:0 0 1em; } #preview h1,#preview h2,#preview h3 { margin:1.2em 0 .5em; }
 .template-simple { font-family:Georgia,serif; padding:70px 80px !important; } .template-simple p { line-height:1.9; }

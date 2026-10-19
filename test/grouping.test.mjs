@@ -1,5 +1,5 @@
 // One runnable check for the layout logic: node test/grouping.test.mjs
-import { normalizeItems, groupItemsIntoLines, linesToParagraphs, lineText, getTemplate } from '../lib.mjs';
+import { normalizeItems, groupItemsIntoLines, linesToParagraphs, lineText, getTemplate, pageGeometry } from '../lib.mjs';
 
 const it = (str, x, y, width = str.length * 5, height = 10) => ({ str, x, y, width, height });
 let failed = 0;
@@ -52,6 +52,13 @@ eq(lineText([it('a\u0001b\u0000c', 0, 0)]), 'abc', 'C0 control chars stripped');
 // Template lookup stays small and predictable for the print preview.
 eq(getTemplate('business').className, 'template-business', 'business template lookup');
 eq(getTemplate('unknown').className, 'template-standard', 'unknown template falls back to standard');
+
+// Fidelity mode geometry: viewport is scaled px; docx wants twips (pt*20)
+// for page size and CSS px (96dpi) for the image. Scale must cancel out.
+eq(pageGeometry({ width: 1224, height: 1584, scale: 2 }),
+  { twipW: 12240, twipH: 15840, pxW: 816, pxH: 1056 }, 'letter page geometry, scale 2');
+eq(pageGeometry({ width: 595, height: 842, scale: 1 }),
+  { twipW: 11900, twipH: 16840, pxW: 793, pxH: 1123 }, 'A4 page geometry, scale 1');
 
 if (failed) { console.error(`\n${failed} test(s) failed`); process.exit(1); }
 console.log('\nall passed');

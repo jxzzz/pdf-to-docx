@@ -1,4 +1,4 @@
-import { normalizeItems, groupItemsIntoLines, linesToParagraphs, lineText, getTemplate } from './lib.mjs';
+import { normalizeItems, groupItemsIntoLines, linesToParagraphs, lineText, getTemplate, pageGeometry } from './lib.mjs';
 
 const PDFJS_VER = '4.10.38';
 let pdfjs = null;
@@ -17,6 +17,7 @@ const statusEl = $('#status');
 const errorEl = $('#error');
 const preview = $('#preview');
 const templateSelect = $('#template');
+const fidelity = $('#fidelity');
 let mode = 'pdf-to-word';
 let busy = false;
 
@@ -29,6 +30,7 @@ for (const button of document.querySelectorAll('[data-mode]')) {
     drop.querySelector('.hint').textContent = mode === 'pdf-to-word' ? '拖入 PDF 文件，或点击选择' : '拖入 Word 文件，或点击选择';
     preview.hidden = true;
     templateSelect.closest('.template-picker').hidden = mode === 'pdf-to-word';
+    fidelity.closest('.fidelity-picker').hidden = mode !== 'pdf-to-word';
     setStatus('');
   });
 }
@@ -80,7 +82,7 @@ async function convert(file) {
   try {
     if (mode === 'pdf-to-word') {
       setStatus(`Reading ${file.name}…`);
-      const blob = await pdfFileToDocx(file);
+      const blob = fidelity.checked ? await pdfFileToDocxFidelity(file) : await pdfFileToDocx(file);
       download(blob, file.name.replace(/\.pdf$/i, '') + '.docx');
       setStatus(`✓ Converted ${file.name} → .docx`);
     } else {
@@ -92,12 +94,50 @@ async function convert(file) {
       setStatus('Preview ready. Choose a style, then print / 预览已生成，可选择样式后打印');
     }
   } catch (e) {
-    showError((mode === 'pdf-to-word' ? 'Conversion failed: ' : 'Preview failed: ') + (e?.message || e));
+    if (e?.name === 'PasswordException') {
+      showError('This PDF is password-protected and cannot be converted / 该 PDF 已加密，无法转换');
+    } else {
+      showError((mode === 'pdf-to-word' ? 'Conversion failed: ' : 'Preview failed: ') + (e?.message || e));
+    }
   } finally { busy = false; }
 }
 
 async function wordFileToHtml(file) {
   return mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+}
+
+async function pdfFileToDocxFidelity(file) {
+  const { getDocument } = await loadPdfjs();
+  const task = getDocument({
+    data: await file.arrayBuffer(),
+    cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/cmaps/`,
+    cMapPacked: true,
+  });
+  try {
+    const pdf = await task.promise;
+    // One section per page so each page keeps its own size (mixed A4/Letter).
+    const sections = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      setStatus(`Rendering page ${p} of ${pdf.numPages}…`);
+      const page = await pdf.getPage(p);
+      // ponytail: fixed 2× scale, JPEG q0.92 — bump to 3×/PNG if fine print blurs.
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.92));
+      const g = pageGeometry(viewport);
+      sections.push({
+        properties: { page: { size: { width: g.twipW, height: g.twipH }, margin: { top: 0, right: 0, bottom: 0, left: 0 } } },
+        children: [new docx.Paragraph({
+          children: [new docx.ImageRun({ data: await blob.arrayBuffer(), transformation: { width: g.pxW, height: g.pxH } })],
+        })],
+      });
+      page.cleanup();
+    }
+    return docx.Packer.toBlob(new docx.Document({ sections }));
+  } finally { await task.destroy(); }
 }
 
 async function pdfFileToDocx(file) {

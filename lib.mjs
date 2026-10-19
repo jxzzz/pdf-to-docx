@@ -57,6 +57,19 @@ export function getTemplate(name) {
   return TEMPLATES[name] || TEMPLATES.standard;
 }
 
+// Fidelity mode: pdf.js viewports are scaled px, docx wants page size in
+// twips (pt × 20) and image size in CSS px (96dpi). Scale cancels out.
+export function pageGeometry(viewport) {
+  const ptW = viewport.width / viewport.scale;
+  const ptH = viewport.height / viewport.scale;
+  return {
+    twipW: Math.round(ptW * 20),
+    twipH: Math.round(ptH * 20),
+    pxW: Math.round((ptW * 96) / 72),
+    pxH: Math.round((ptH * 96) / 72),
+  };
+}
+
 const CJK = /[　-鿿豈-﫿＀-￯]/;
 
 function joinLines(a, b) {
