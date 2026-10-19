@@ -1,5 +1,5 @@
 // One runnable check for the layout logic: node test/grouping.test.mjs
-import { normalizeItems, groupItemsIntoLines, linesToParagraphs, lineText } from '../lib.mjs';
+import { normalizeItems, groupItemsIntoLines, linesToParagraphs, lineText, getTemplate } from '../lib.mjs';
 
 const it = (str, x, y, width = str.length * 5, height = 10) => ({ str, x, y, width, height });
 let failed = 0;
@@ -48,6 +48,10 @@ eq(rawParas, ['Hello world', 'second line'], 'pdf.js-shaped items via normalizeI
 
 // C0 control chars are stripped (they would make document.xml invalid XML)
 eq(lineText([it('a\u0001b\u0000c', 0, 0)]), 'abc', 'C0 control chars stripped');
+
+// Template lookup stays small and predictable for the print preview.
+eq(getTemplate('business').className, 'template-business', 'business template lookup');
+eq(getTemplate('unknown').className, 'template-standard', 'unknown template falls back to standard');
 
 if (failed) { console.error(`\n${failed} test(s) failed`); process.exit(1); }
 console.log('\nall passed');

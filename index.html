@@ -3,30 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PDF → Word</title>
-  <meta name="description" content="Convert PDF to Word (.docx) entirely in your browser. No upload, no server.">
+  <title>PDF ↔ Word</title>
+  <meta name="description" content="Convert PDF and Word files in your browser, with printable Word-to-PDF templates.">
   <link rel="stylesheet" href="style.css">
   <script defer src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 </head>
 <body>
   <main>
-    <h1>PDF → Word</h1>
+    <h1>PDF ↔ Word</h1>
     <p class="tagline">Convert in your browser — nothing is uploaded. / 浏览器内本地转换，文件不会上传。</p>
 
-    <div id="drop" role="button" tabindex="0" aria-label="Choose or drop a PDF file">
+    <div class="mode-switch" role="group" aria-label="Conversion type">
+      <button type="button" data-mode="pdf-to-word" class="active">PDF → Word</button>
+      <button type="button" data-mode="word-to-pdf">Word → PDF</button>
+    </div>
+
+    <div id="drop" role="button" tabindex="0" aria-label="Choose or drop a file">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
       </svg>
       <p><strong>Drop a PDF here</strong> or click to choose</p>
       <p class="hint">拖入 PDF 文件，或点击选择</p>
     </div>
     <input type="file" id="file" accept="application/pdf,.pdf" hidden>
 
+    <div class="template-picker" hidden>
+      <label for="template">Preview style / 预览样式</label>
+      <select id="template">
+        <option value="standard">标准 Standard</option>
+        <option value="simple">简洁 Simple</option>
+        <option value="business">商务 Business</option>
+      </select>
+      <button type="button" id="print">Print / Save PDF</button>
+    </div>
+    <article id="preview" class="template-standard" hidden aria-label="Word document preview"></article>
+
     <p id="status" role="status" hidden></p>
     <p id="error" hidden role="alert"></p>
   </main>
-
   <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -47,6 +47,16 @@ export function lineText(items) {
   return out.replace(BAD_XML, '').replace(/\s+/g, ' ').trim();
 }
 
+export const TEMPLATES = {
+  standard: { className: 'template-standard', label: '标准' },
+  simple: { className: 'template-simple', label: '简洁' },
+  business: { className: 'template-business', label: '商务' },
+};
+
+export function getTemplate(name) {
+  return TEMPLATES[name] || TEMPLATES.standard;
+}
+
 const CJK = /[　-鿿豈-﫿＀-￯]/;
 
 function joinLines(a, b) {
